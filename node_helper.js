@@ -22,7 +22,7 @@ module.exports = NodeHelper.create({
 
   startTouch() {
     // Touchscreen event device
-    this.device = new evdev("/dev/input/event5");
+    this.device = new evdev("/dev/input/by-id/usb-eGalax_Inc._USB_TouchController-event-if00");
 
     this.device.on("EV_ABS", ev => {
       if (ev.code === "ABS_X") this.rawX = ev.value;
