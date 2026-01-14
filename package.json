@@ -1,0 +1,8 @@
+{
+  "name": "mmm-touch-gestures",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "evdev": "^0.3.0"
+  }
+}
