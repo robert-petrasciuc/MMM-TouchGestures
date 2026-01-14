@@ -24,6 +24,7 @@ module.exports = NodeHelper.create({
   startEvtest() {
     console.log("Starting evtest on", this.DEVICE);
     this.evtest = spawn("evtest", [this.DEVICE]);
+    console.log("PID:", this.evtest.pid);
 
     this.evtest.stdout.on("data", data => this.handleData(data.toString()));
     this.evtest.stderr.on("data", data => console.error("evtest error:", data.toString()));
