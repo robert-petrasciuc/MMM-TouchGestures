@@ -9,20 +9,29 @@ Module.register("MMM-TouchGestures", {
   },
 
   socketNotificationReceived(notification, payload) {
-
-    this.sendSwipeNotification(notification)
-/*    if (notification === "SWIPE_LEFT") {
-      this.sendNotification(
-        this.config.swipeNotificationPrefix + "_LEFT"
-      );
+     switch(notification) {
+      case "TOUCH_DOWN":
+        console.log("Touch down at", payload.x, payload.y);
+        break;
+      case "TOUCH_UP":
+        console.log("Touch up at", payload.x, payload.y);
+        break;
+      case "TOUCH_MOVE":
+        console.log("Touch move at", payload.x, payload.y);
+        break;
+      case "SWIPE_LEFT":
+        console.log("Swipe LEFT detected");
+        break;
+      case "SWIPE_RIGHT":
+        console.log("Swipe RIGHT detected");
+        break;
+      case "SWIPE_UP":
+        console.log("Swipe UP detected");
+        break;
+      case "SWIPE_DOWN":
+        console.log("Swipe DOWN detected");
+        break;
     }
-
-    if (notification === "SWIPE_RIGHT") {
-      this.sendNotification(
-        this.config.swipeNotificationPrefix + "_RIGHT"
-      );
-    }
-      */
   },
 
   sendSwipeNotification: function(direction) {

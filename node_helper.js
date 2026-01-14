@@ -1,85 +1,95 @@
 const NodeHelper = require("node_helper");
-const evdev = require("evdev");
+const { spawn } = require("child_process");
 
 module.exports = NodeHelper.create({
+
   start() {
-    this.device = null;
-    this.touching = false;
+    console.log("MMM-TouchGestures helper started");
+
+    // Stable device path
+    this.DEVICE = "/dev/input/by-id/usb-eGalax_Inc._USB_TouchController-event-if00";
+
+    // State tracking
     this.rawX = 0;
     this.rawY = 0;
-    this.touchStart = null;
+    this.touching = false;
+    this.swipeBuffer = [];
 
-    // Swipe tuning
-    this.SWIPE_MIN_DISTANCE = 80;
-    this.SWIPE_MAX_TIME = 600;
+    this.SWIPE_THRESHOLD = 100; // pixels
+    this.MAX_SWIPE_TIME = 500; // ms
+
+    this.startEvtest();
   },
 
-  socketNotificationReceived(notification) {
-    if (notification === "START_TOUCH") {
-      this.startTouch();
-    }
+  startEvtest() {
+    console.log("Starting evtest on", this.DEVICE);
+    this.evtest = spawn("evtest", [this.DEVICE]);
+
+    this.evtest.stdout.on("data", data => this.handleData(data.toString()));
+    this.evtest.stderr.on("data", data => console.error("evtest error:", data.toString()));
+    this.evtest.on("close", code => console.log("evtest exited with", code));
   },
 
-  startTouch() {
-    // Touchscreen event device
-    this.device = new evdev("/dev/input/by-id/usb-eGalax_Inc._USB_TouchController-event-if00");
+  handleData(data) {
+    const lines = data.split("\n");
+    lines.forEach(line => {
+      if (!line.trim()) return;
 
-    this.device.on("EV_ABS", ev => {
-      if (ev.code === "ABS_X") this.rawX = ev.value;
-      if (ev.code === "ABS_Y") this.rawY = ev.value;
-    });
+      // Track X
+      if (line.includes("ABS_X")) {
+        const match = line.match(/value\s*=\s*(\d+)/);
+        if (match) this.rawX = parseInt(match[1]);
+      }
 
-    this.device.on("EV_KEY", ev => {
-      if (ev.code === "BTN_TOUCH") {
-        this.touching = ev.value === 1;
+      // Track Y
+      if (line.includes("ABS_Y")) {
+        const match = line.match(/value\s*=\s*(\d+)/);
+        if (match) this.rawY = parseInt(match[1]);
+      }
 
-        if (this.touching) {
-          this.onTouchStart();
-        } else {
-          this.onTouchEnd();
-        }
+      // Track touch down/up
+      if (line.includes("BTN_TOUCH")) {
+        if (line.includes("value = 1")) this.touchStart(this.rawX, this.rawY);
+        if (line.includes("value = 0")) this.touchEnd(this.rawX, this.rawY);
       }
     });
   },
 
-  calibrate(x, y) {
-    // Your matrix:
-    // x' = 1.57*y - 0.30
-    // y' = 1.80*x - 0.42
-    return {
-      x: 1.57 * y - 0.30,
-      y: 1.80 * x - 0.42
-    };
+  touchStart(x, y) {
+    this.touching = true;
+    this.swipeBuffer = [{ x, y, time: Date.now() }];
+    this.sendSocketNotification("TOUCH_DOWN", { x, y });
   },
 
-  onTouchStart() {
-    const p = this.calibrate(this.rawX, this.rawY);
+  touchEnd(x, y) {
+    if (!this.touching) return;
+    this.touching = false;
+    this.sendSocketNotification("TOUCH_UP", { x, y });
 
-    this.touchStart = {
-      x: p.x,
-      y: p.y,
-      time: Date.now()
-    };
+    // Detect swipe
+    const first = this.swipeBuffer[0];
+    const last = this.swipeBuffer[this.swipeBuffer.length - 1];
+    const dt = last.time - first.time;
+    const dx = last.x - first.x;
+    const dy = last.y - first.y;
+
+    if (dt < this.MAX_SWIPE_TIME) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > this.SWIPE_THRESHOLD) {
+        this.sendSocketNotification(dx > 0 ? "SWIPE_RIGHT" : "SWIPE_LEFT", {});
+      } else if (Math.abs(dy) > this.SWIPE_THRESHOLD) {
+        this.sendSocketNotification(dy > 0 ? "SWIPE_DOWN" : "SWIPE_UP", {});
+      }
+    }
+
+    this.swipeBuffer = [];
   },
 
-  onTouchEnd() {
-    if (!this.touchStart) return;
-
-    const p = this.calibrate(this.rawX, this.rawY);
-    const dx = p.x - this.touchStart.x;
-    const dy = p.y - this.touchStart.y;
-    const dt = Date.now() - this.touchStart.time;
-
-    this.touchStart = null;
-
-    if (dt > this.SWIPE_MAX_TIME) return;
-    if (Math.abs(dx) < this.SWIPE_MIN_DISTANCE) return;
-    if (Math.abs(dx) < Math.abs(dy)) return;
-
-    if (dx > 0) {
-      this.sendSocketNotification("SWIPE_RIGHT");
-    } else {
-      this.sendSocketNotification("SWIPE_LEFT");
+  // Track movement while touching
+  trackMove(x, y) {
+    if (this.touching) {
+      this.swipeBuffer.push({ x, y, time: Date.now() });
+      this.sendSocketNotification("TOUCH_MOVE", { x, y });
     }
   }
+
 });
