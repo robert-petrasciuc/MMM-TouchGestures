@@ -40,18 +40,20 @@ module.exports = NodeHelper.create({
       if (line.includes("ABS_X")) {
         const match = line.match(/value\s*(\d+)/);
         if (match) this.rawX = parseInt(match[1]);
+        console.log("rawX: ", this.rawX);
       }
 
       // Track Y
       if (line.includes("ABS_Y")) {
         const match = line.match(/value\s*(\d+)/);
         if (match) this.rawY = parseInt(match[1]);
+        console.log("rawY :", this.rawY);
       }
 
       // Track touch down/up
       if (line.includes("BTN_TOUCH")) {
-        if (line.includes("value = 1")) this.touchStart(this.rawX, this.rawY);
-        if (line.includes("value = 0")) this.touchEnd(this.rawX, this.rawY);
+        if (line.includes("value 1")) this.touchStart(this.rawX, this.rawY);
+        if (line.includes("value 0")) this.touchEnd(this.rawX, this.rawY);
       }
     });
   },
