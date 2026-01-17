@@ -60,13 +60,14 @@ module.exports = NodeHelper.create({
 
   touchStart(x, y) {
     this.touching = true;
-    this.swipeBuffer = [{ x, y, time: Date.now() }];
+    this.swipeBuffer.push([{ x, y, time: Date.now() }]);
     this.sendSocketNotification("TOUCH_DOWN", { x, y });
   },
 
   touchEnd(x, y) {
     if (!this.touching) return;
     this.touching = false;
+    this.swipeBuffer.push([{ x, y, time: Date.now() }]);
     this.sendSocketNotification("TOUCH_UP", { x, y });
 
     // Detect swipe
