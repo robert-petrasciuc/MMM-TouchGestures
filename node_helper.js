@@ -82,9 +82,9 @@ module.exports = NodeHelper.create({
     const dt = last.time - first.time;
     const dx = last.x - first.x;
     const dy = last.y - first.y;
-    console.log("first: ", this.first);
-    console.log("last: ", this.last);
-    console.log("time: ", this.dt,"deltax: ", this.dx,"deltay: ", this.dy);
+    console.log("first: ", first);
+    console.log("last: ", last);
+    console.log("time: ", dt,"deltax: ", dx,"deltay: ", dy);
 
     if (dt < this.MAX_SWIPE_TIME) {
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > this.SWIPE_THRESHOLD) {
