@@ -72,6 +72,10 @@ module.exports = NodeHelper.create({
     console.log(this.swipeBuffer);
     this.sendSocketNotification("TOUCH_UP", { x, y });
 
+    console.log("line 0:", this.swipeBuffer[0])
+    console.log("line 1:", this.swipeBuffer[1])
+    console.log("line 2:", this.swipeBuffer[2])
+
     // Detect swipe
     const first = this.swipeBuffer[0];
     const last = this.swipeBuffer[this.swipeBuffer.length - 1];
