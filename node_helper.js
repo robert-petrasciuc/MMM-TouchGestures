@@ -79,10 +79,10 @@ module.exports = NodeHelper.create({
     // Detect swipe
     const first = this.swipeBuffer[0];
     const last = this.swipeBuffer[this.swipeBuffer.length - 1];
-    const dt = last.time - first.time;
-    const dx = last.x - first.x;
-    const dy = last.y - first.y;
-    console.log("first: ", first);
+    const dt = Number(last.time) - Number(first.time);
+    const dx = Number(last.x) - Number(first.x);
+    const dy = Number(last.y) - Number(first.y);
+    console.log("first: ", first.time);
     console.log("last: ", last);
     console.log("time: ", dt,"deltax: ", dx,"deltay: ", dy);
 
