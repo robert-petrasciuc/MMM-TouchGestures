@@ -8,7 +8,18 @@ module.exports = NodeHelper.create({
 
     // Stable device path
     this.DEVICE = "/dev/input/by-id/usb-eGalax_Inc._USB_TouchController-event-if00";
-
+    // Transformation matrix
+    this.transform = {
+          a: 0,
+          b: 1.57,
+          c: -0.30,
+          d: 1.80,
+          e: 0,
+          f: -0.42
+        };
+    // Screen Resolution
+    this.SCREEN_WIDTH = 1280;
+    this.SCREEN_HEIGHT = 768;
     // State tracking
     this.rawX = 0;
     this.rawY = 0;
@@ -20,6 +31,24 @@ module.exports = NodeHelper.create({
 
     this.startEvtest();
   },
+
+  normalize(x, y) {
+    return {
+      x: x / 4095,
+      y: y / 4095
+    };
+  },
+
+  applyTransform(x, y) {
+    const n = this.normalize(x, y);
+    const { a, b, c, d, e, f } = this.transform;
+
+    return {
+      x: Math.round((a * n.x + b * n.y + c) * this.SCREEN_WIDTH),
+      y: Math.round((d * n.x + e * n.y + f) * this.SCREEN_HEIGHT)
+    };
+  },
+
 
   startEvtest() {
     console.log("Starting evtest on", this.DEVICE);
@@ -60,38 +89,42 @@ module.exports = NodeHelper.create({
 
   touchStart(x, y) {
     this.touching = true;
-    this.swipeBuffer.push({ x, y, time: Date.now() });
-    console.log(this.swipeBuffer);
-    this.sendSocketNotification("TOUCH_DOWN", { x, y });
+
+    const p = this.applyTransform(x, y);
+
+    this.swipeBuffer.push({ x: p.x, y: p.y, time: Date.now() });
+    this.sendSocketNotification("TOUCH_DOWN", p);
   },
+
 
   touchEnd(x, y) {
     if (!this.touching) return;
     this.touching = false;
-    this.swipeBuffer.push({ x, y, time: Date.now() });
-    console.log(this.swipeBuffer);
-    this.sendSocketNotification("TOUCH_UP", { x, y });
 
-    // Detect swipe
+    const p = this.applyTransform(x, y);
+
+    this.swipeBuffer.push({ x: p.x, y: p.y, time: Date.now() });
+    this.sendSocketNotification("TOUCH_UP", p);
+
+    // Swipe detection stays the same
     const first = this.swipeBuffer[0];
     const last = this.swipeBuffer[this.swipeBuffer.length - 1];
-    const dt = Number(last.time) - Number(first.time);
-    const dx = Number(last.x) - Number(first.x);
-    const dy = Number(last.y) - Number(first.y);
-    console.log("first: ", first.time);
-    console.log("last: ", last);
-    console.log("time: ", dt,"deltax: ", dx,"deltay: ", dy);
 
+    const dt = last.time - first.time;
+    const dx = last.x - first.x;
+    const dy = last.y - first.y;
+    console.log("time: ", dt,"deltax: ", dx,"deltay: ", dy);
     if (dt < this.MAX_SWIPE_TIME) {
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > this.SWIPE_THRESHOLD) {
-        this.sendSocketNotification(dx > 0 ? "SWIPE_RIGHT" : "SWIPE_LEFT", {});
+        this.sendSocketNotification(dx > 0 ? "SWIPE_RIGHT" : "SWIPE_LEFT");
       } else if (Math.abs(dy) > this.SWIPE_THRESHOLD) {
-        this.sendSocketNotification(dy > 0 ? "SWIPE_DOWN" : "SWIPE_UP", {});
+        this.sendSocketNotification(dy > 0 ? "SWIPE_DOWN" : "SWIPE_UP");
       }
     }
 
     this.swipeBuffer = [];
   },
+
 
   // Track movement while touching
   trackMove(x, y) {
