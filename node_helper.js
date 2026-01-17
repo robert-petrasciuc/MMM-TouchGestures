@@ -40,14 +40,14 @@ module.exports = NodeHelper.create({
       if (line.includes("ABS_X")) {
         const match = line.match(/value\s*(\d+)/);
         if (match) this.rawX = parseInt(match[1]);
-        console.log("rawX: ", this.rawX);
+        //console.log("rawX: ", this.rawX);
       }
 
       // Track Y
       if (line.includes("ABS_Y")) {
         const match = line.match(/value\s*(\d+)/);
         if (match) this.rawY = parseInt(match[1]);
-        console.log("rawY :", this.rawY);
+        //console.log("rawY :", this.rawY);
       }
 
       // Track touch down/up
@@ -75,6 +75,7 @@ module.exports = NodeHelper.create({
     const dt = last.time - first.time;
     const dx = last.x - first.x;
     const dy = last.y - first.y;
+    console.log("time: ", this.dt,"deltax: ", this.dx,"deltay: ", this.dy);
 
     if (dt < this.MAX_SWIPE_TIME) {
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > this.SWIPE_THRESHOLD) {
