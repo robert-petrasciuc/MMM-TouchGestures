@@ -60,7 +60,7 @@ module.exports = NodeHelper.create({
 
   touchStart(x, y) {
     this.touching = true;
-    this.swipeBuffer.push([{ x, y, time: Date.now() }]);
+    this.swipeBuffer.push({ x, y, time: Date.now() });
     console.log(this.swipeBuffer);
     this.sendSocketNotification("TOUCH_DOWN", { x, y });
   },
@@ -68,13 +68,9 @@ module.exports = NodeHelper.create({
   touchEnd(x, y) {
     if (!this.touching) return;
     this.touching = false;
-    this.swipeBuffer.push([{ x, y, time: Date.now() }]);
+    this.swipeBuffer.push({ x, y, time: Date.now() });
     console.log(this.swipeBuffer);
     this.sendSocketNotification("TOUCH_UP", { x, y });
-
-    console.log("line 0:", this.swipeBuffer[0])
-    console.log("line 1:", this.swipeBuffer[1])
-    console.log("line 2:", this.swipeBuffer[2])
 
     // Detect swipe
     const first = this.swipeBuffer[0];
