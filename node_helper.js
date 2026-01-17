@@ -38,13 +38,13 @@ module.exports = NodeHelper.create({
 
       // Track X
       if (line.includes("ABS_X")) {
-        const match = line.match(/value\s*=\s*(\d+)/);
+        const match = line.match(/value\s*(\d+)/);
         if (match) this.rawX = parseInt(match[1]);
       }
 
       // Track Y
       if (line.includes("ABS_Y")) {
-        const match = line.match(/value\s*=\s*(\d+)/);
+        const match = line.match(/value\s*(\d+)/);
         if (match) this.rawY = parseInt(match[1]);
       }
 
