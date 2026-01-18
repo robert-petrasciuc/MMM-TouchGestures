@@ -26,8 +26,9 @@ module.exports = NodeHelper.create({
     this.touching = false;
     this.swipeBuffer = [];
 
-    this.SWIPE_THRESHOLD = 20; // pixels
+    this.SWIPE_THRESHOLD = 100; // pixels
     this.MAX_SWIPE_TIME = 500; // ms
+    this.MIN_SWIPE_TIME = 100;
 
     this.startEvtest();
   },
@@ -114,10 +115,13 @@ module.exports = NodeHelper.create({
     const dx = last.x - first.x;
     const dy = last.y - first.y;
     console.log("time: ", dt,"deltax: ", dx,"deltay: ", dy);
-    if (dt < this.MAX_SWIPE_TIME) {
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > this.SWIPE_THRESHOLD) {
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
+
+    if (dt > this.MIN_SWIPE_TIME && dt < this.MAX_SWIPE_TIME) {
+      if (adx > ady && adx > this.SWIPE_THRESHOLD) {
         this.sendSocketNotification(dx > 0 ? "SWIPE_RIGHT" : "SWIPE_LEFT");
-      } else if (Math.abs(dy) > this.SWIPE_THRESHOLD) {
+      } else if (ady > this.SWIPE_THRESHOLD) {
         this.sendSocketNotification(dy > 0 ? "SWIPE_DOWN" : "SWIPE_UP");
       }
     }
