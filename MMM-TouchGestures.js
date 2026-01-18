@@ -21,11 +21,11 @@ Module.register("MMM-TouchGestures", {
         break;
       case "SWIPE_LEFT":
         console.log("Swipe LEFT detected");
-        this.sendSwipeNotification("SWIPE_LEFT");
+        //this.sendSwipeNotification("SWIPE_LEFT");
         break;
       case "SWIPE_RIGHT":
         console.log("Swipe RIGHT detected");
-        this.sendSwipeNotification("SWIPE_RIGHT");
+        //this.sendSwipeNotification("SWIPE_RIGHT");
         break;
       case "SWIPE_UP":
         console.log("Swipe UP detected");
