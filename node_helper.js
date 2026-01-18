@@ -26,7 +26,7 @@ module.exports = NodeHelper.create({
     this.touching = false;
     this.swipeBuffer = [];
 
-    this.SWIPE_THRESHOLD = 100; // pixels
+    this.SWIPE_THRESHOLD = 20; // pixels
     this.MAX_SWIPE_TIME = 500; // ms
 
     this.startEvtest();
